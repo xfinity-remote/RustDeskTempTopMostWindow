@@ -1,8 +1,12 @@
 #include "pch.h"
+
+// Windows headers in correct order
+#include <windows.h>
+#include <objidl.h>    // For IStream
+#include <gdiplus.h>   // Must come after objidl.h
 #include <tchar.h>
 #include <memory>
 #include <type_traits>
-#include <gdiplus.h>
 
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "gdiplus.lib")
@@ -99,8 +103,9 @@ VOID OnPaintGdiPlus(HWND hwnd, HDC hdc)
     int width = rcClient.right - rcClient.left;
     int height = rcClient.bottom - rcClient.top;
 
-    // Create graphics object
-    Gdiplus::Graphics graphics(hdc);
+    // Create graphics object with double buffering
+    Gdiplus::Bitmap buffer(width, height);
+    Gdiplus::Graphics graphics(&buffer);
     graphics.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 
     // Semi-transparent black background
@@ -135,15 +140,18 @@ VOID OnPaintGdiPlus(HWND hwnd, HDC hdc)
     // Draw text
     Gdiplus::FontFamily fontFamily(L"Segoe UI");
     Gdiplus::Font font(&fontFamily, 16.0f);
+    Gdiplus::StringFormat format;
+    format.SetAlignment(Gdiplus::StringAlignmentCenter);
     Gdiplus::SolidBrush textBrush(Gdiplus::Color(255, 255, 255, 255));
     
     const WCHAR text[] = L"Please wait while the system is processing...";
-    Gdiplus::PointF textPosition(
-        centerX - 150.0f,
-        centerY + radius + 20.0f
-    );
+    Gdiplus::RectF layoutRect(0, centerY + radius + 20.0f, (Gdiplus::REAL)width, 50.0f);
     
-    graphics.DrawString(text, -1, &font, textPosition, &textBrush);
+    graphics.DrawString(text, -1, &font, layoutRect, &format, &textBrush);
+
+    // Copy buffer to screen
+    Gdiplus::Graphics screenGraphics(hdc);
+    screenGraphics.DrawImage(&buffer, 0, 0);
 
     // Update angle for animation
     g_angle += 5.0f;
@@ -322,6 +330,7 @@ int main(int argc, char* argv[])
 
 #endif
 
+// Windows version check helper
 BOOL IsWindowsVersionOrGreater(
     DWORD os_major,
     DWORD os_minor,
