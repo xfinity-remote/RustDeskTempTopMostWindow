@@ -247,7 +247,7 @@ HWND CreateWin(HMODULE hModule, UINT zbid, const TCHAR* title, const TCHAR* clas
 	// https://stackoverflow.com/a/5299718/1926020
 	HMONITOR hmon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
 	MONITORINFO mi = { sizeof(mi) };
-
+	
 	if (0 == GetMonitorInfo(hmon, &mi))
 	{
 		ShowErrorMsg(_T("GetMonitorInfo"));
@@ -310,7 +310,7 @@ HWND CreateWin(HMODULE hModule, UINT zbid, const TCHAR* title, const TCHAR* clas
 	}
 
 	ShowWindow(hwnd, SW_HIDE);
-
+	
 	if (FALSE == UpdateWindow(hwnd))
 	{
 		ShowErrorMsg(_T("UpdateWindow"));
